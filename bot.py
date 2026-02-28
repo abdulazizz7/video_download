@@ -68,7 +68,6 @@ async def start_command(message: Message):
         "• Instagram videolarni yuklab beraman\n"
         "• TikTok videolarni watermark-siz chiqaraman\n"
         "• Link orqali ishlayman — oson va tez\n"
-        "• Oldin yuklangan video bo‘lsa, 1 soniyada yetkazaman 🚀\n"
         "• Video sifati maksimal bo‘ladi\n\n"
         "🧠 **Qanday ishlaydi?**\n"
         "1️⃣ Instagram yoki TikTok video linkini nusxa ol\n"
@@ -252,8 +251,7 @@ async def handle_link(message: Message, state: FSMContext):
     # Linkni tekshirish
     if not re.search(r'https?://', url):
         await message.reply(
-            "❌ Iltimos, to'g'ri video link yuboring!\n\n"
-            "Misol: https://www.instagram.com/p/XXXXX/"
+            "❌ Iltimos, to'g'ri video linkini yuboring!\n\n"
         )
         return
     
@@ -271,7 +269,7 @@ async def handle_link(message: Message, state: FSMContext):
         return
     
     # Yuklashni boshlash
-    status_msg = await message.reply("⏳ Video yuklanmoqda...")
+    status_msg = await message.reply("⏳")
     
     try:
         # Bazada video borligini tekshirish
@@ -359,8 +357,7 @@ async def handle_link(message: Message, state: FSMContext):
 async def handle_unknown(message: Message):
     """Noma'lum xabarlar"""
     await message.reply(
-        "❌ Iltimos, video link yuboring!\n\n"
-        "Misol: https://www.instagram.com/p/XXXXX/"
+        "❌ Iltimos, video linkini yuboring!\n\n"
     )
 
 async def on_startup():
