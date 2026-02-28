@@ -1,0 +1,5 @@
+aiogram
+aiofiles
+python-dotenv
+yt-dlp
+aiosqlite
