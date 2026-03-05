@@ -77,7 +77,7 @@ async def start_command(message: Message):
         "• ✅ Yuqori sifat (1080p)\n"
         "• ✅ Ortiqcha reklamalar yo'q\n\n"
         "⚠️Faqat Instagram linklari qabul qilinadi!\n\n"
-        "Endi menga link tashlang!👇"
+        "Endi menga link tashlang!"
     )
     
     await message.reply(text, parse_mode="Markdown")
