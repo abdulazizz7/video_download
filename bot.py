@@ -60,27 +60,24 @@ async def start_command(message: Message):
     
     text = (
         f"👋 Salom, {user.first_name}! Xush kelibsiz!\n\n"
-        "🤖 Men — **TopildiSaveBot**\n"
+        "🤖 Men — TopildiSaveBot\n"
         "Instagram platformasida sizga video va reels larni tez yuklab beraman\n\n"
-        "⚡️ **Qanday ishlayman?**\n"
+        "⚡️Qanday ishlayman?\n"
         "1️⃣ Instagram'dan video linkini nusxa oling\n"
         "2️⃣ Menga tashlang\n"
         "3️⃣ Men bir zumda yuklab beraman\n\n"
-        "📥 **Yuklaydigan formatlar:**\n"
+        "📥 Yuklaydigan formatlar:\n"
         "• 📱 Post (foto/video)\n"
         "• 🎬 Reel (qisqa video)\n"
-        "• 📺 TV (uzun video)\n\n"
-        "🔗 **Misol link:**\n"
-        "`https://www.instagram.com/reel/DU-F5T_DO5K/`\n\n"
-        "🔥 **Tezlik:**\n"
+        "🔥Tezlik:\n"
         "• Birinchi marta: 5-10 soniya\n"
-        "• Keyingi marta: 1-2 soniya (keshlangan)\n\n"
-        "✨ **Qulayliklar:**\n"
+        "• Keyingi marta: 1-2 soniya\n\n"
+        "✨Qulayliklar:\n"
         "• ✅ Bepul va cheksiz\n"
         "• ✅ Yuqori sifat (1080p)\n"
         "• ✅ Ortiqcha reklamalar yo'q\n\n"
-        "⚠️ **Faqat Instagram linklari qabul qilinadi!**\n\n"
-        "👇 **Endi menga link tashlang!** 👇"
+        "⚠️Faqat Instagram linklari qabul qilinadi!\n\n"
+        "Endi menga link tashlang!👇"
     )
     
     await message.reply(text, parse_mode="Markdown")
@@ -89,20 +86,7 @@ async def start_command(message: Message):
 async def help_command(message: Message):
     """Yordam komandasi"""
     text = (
-        "📚 **Yordam**\n\n"
-        "📹 **Video yuklash:**\n"
-        "Instagram linkini yuboring\n\n"
-        "🔗 **Qo'llab-quvvatlanadigan linklar:**\n"
-        "• `https://www.instagram.com/p/...`\n"
-        "• `https://www.instagram.com/reel/...`\n"
-        "• `https://www.instagram.com/tv/...`\n\n"
-        "📊 **Statistika:**\n"
-        "/stats - Statistikangiz\n\n"
-        "🛠 **Adminlar uchun:**\n"
-        "/admin - Admin panel\n\n"
-        "⚠️ **Faqat Instagram linklari ishlaydi!**\n\n"
-        "📢 **Kanal:** @example\n"
-        "👨‍💻 **Admin:** @example"
+        "👨‍💻Admin: @azbeyy"
     )
     await message.reply(text, parse_mode="Markdown")
 
@@ -181,9 +165,8 @@ async def handle_instagram_link(message: Message, state: FSMContext):
     # Link borligini tekshirish
     if not re.search(r'https?://', url):
         await message.reply(
-            "❌ **Xato!**\n\n"
-            "Bu link emas. Iltimos, Instagram video linkini yuboring.\n\n"
-            "Misol: `https://www.instagram.com/reel/DU-F5T_DO5K/`"
+            "❌Xato\n\n"
+            "Bu link emas. Iltimos, Instagram video linkini yuboring."
         )
         return
     
@@ -202,15 +185,14 @@ async def handle_instagram_link(message: Message, state: FSMContext):
     
     if not is_instagram:
         await message.reply(
-            "❌ **Noto'g'ri link!**\n\n"
-            "Bu bot **FAQAT INSTAGRAM** videolarini yuklab beradi.\n"
-            "Iltimos, Instagram video linkini yuboring.\n\n"
-            "Misol: `https://www.instagram.com/reel/DU-F5T_DO5K/`"
+            "❌Noto'g'ri link"
+            "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi.\n"
+            "Iltimos, Instagram video linkini yuboring."
         )
         return
     
     # Yuklashni boshlash
-    status_msg = await message.reply("⏳ Video yuklanmoqda... Iltimos, kuting...")
+    status_msg = await message.reply("⏳")
     
     try:
         # Bazada video borligini tekshirish
@@ -225,7 +207,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
                 if file_id:
                     await message.reply_video(
                         video=file_id,
-                        caption=f"✅ **@TopildiSaveBot orqali yuklab olindi**\n📥 Keshdan olindi | ⚡️ 1 soniyada",
+                        caption=f"📥 @TopildiSaveBot orqali yuklab olindi.",
                         supports_streaming=True
                     )
                     
@@ -242,7 +224,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
                 logger.error(f"Keshdan olishda xatolik: {e}")
         
         # Yangi video yuklash
-        await status_msg.edit_text("⏳ Instagram video yuklanmoqda... Bu 5-20 soniya vaqt olishi mumkin")
+        await status_msg.edit_text("⏳")
         
         # To'g'ri funksiya nomi: download_instagram_video
         file_id, error = await downloader.download_instagram_video(url)
@@ -251,13 +233,10 @@ async def handle_instagram_link(message: Message, state: FSMContext):
             # Xato turiga qarab xabar
             if "50MB dan katta" in error:
                 await status_msg.edit_text(
-                    "❌ **Video hajmi juda katta!**\n\n"
-                    "Bu video 50MB dan katta. Telegram 50MB dan katta fayllarni qabul qilmaydi.\n\n"
-                    "Iltimos, kichikroq video yuboring."
-                )
+                    "❌Video hajmi juda katta!"               )
             elif "mavjud emas" in error or "o'chirilgan" in error:
                 await status_msg.edit_text(
-                    "❌ **Video topilmadi!**\n\n"
+                    "❌Video topilmadi!\n\n"
                     "Bu video mavjud emas yoki o'chirilgan.\n"
                     "Iltimos, boshqa link yuboring."
                 )
@@ -269,7 +248,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
         
         await message.reply_video(
             video=file_id,
-            caption=f"✅ **@TopildiSaveBot orqali yuklab olindi**",
+            caption=f"@TopildiSaveBot orqali yuklab olindi",
             supports_streaming=True
         )
         
@@ -306,14 +285,9 @@ async def handle_instagram_link(message: Message, state: FSMContext):
 async def handle_unknown(message: Message):
     """Noma'lum xabarlar"""
     await message.reply(
-        "❌ **Noto'g'ri buyruq!**\n\n"
-        "Bu bot **FAQAT INSTAGRAM** videolarini yuklab beradi.\n"
+        "❌ Noto'g'ri buyruq!\n\n"
+        "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi.\n"
         "Iltimos, Instagram video linkini yuboring.\n\n"
-        "Misol: `https://www.instagram.com/reel/DU-F5T_DO5K/`\n\n"
-        "📌 **Buyruqlar:**\n"
-        "/start - Botni ishga tushirish\n"
-        "/help - Yordam\n"
-        "/stats - Statistikangiz"
     )
 
 # ========== MAJBURIY OBUNA CHECK ==========
@@ -366,9 +340,8 @@ async def check_subscription_callback(callback: CallbackQuery):
     else:
         await callback.message.delete()
         await callback.message.answer(
-            "✅ **Obuna tasdiqlandi!**\n\n"
+            "✅ Obuna tasdiqlandi!\n\n"
             "Endi Instagram videolarini yuklab olishingiz mumkin.\n"
-            "Menga link tashlashni boshlang 👇"
         )
         await callback.answer("Obuna tasdiqlandi!", show_alert=True)
 
