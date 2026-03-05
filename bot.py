@@ -99,11 +99,10 @@ async def user_stats(message: Message):
         return
     
     await message.reply(
-        f"📊 **Sizning statistikangiz**\n\n"
+        f"📊 Sizning statistikangiz\n\n"
         f"📥 Yuklagan videolaringiz: {user['total_downloads']}\n"
         f"🕐 Qo'shilgan sana: {user['joined_date'][:10] if user['joined_date'] else 'N/A'}\n"
-        f"📅 Oxirgi faollik: {user['last_activity'][:10] if user['last_activity'] else 'N/A'}",
-        parse_mode="Markdown"
+        f"📅 Oxirgi faollik: {user['last_activity'][:10] if user['last_activity'] else 'N/A'}"
     )
 
 @dp.message(Command("cancel"))
@@ -164,10 +163,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
     
     # Link borligini tekshirish
     if not re.search(r'https?://', url):
-        await message.reply(
-            "❌Xato\n\n"
-            "Bu link emas. Iltimos, Instagram video linkini yuboring."
-        )
+        await message.reply("❌Xato\n\nBu link emas. Iltimos, Instagram video linkini yuboring.")
         return
     
     # FAQAT INSTAGRAM linklarini tekshirish
@@ -185,13 +181,13 @@ async def handle_instagram_link(message: Message, state: FSMContext):
     
     if not is_instagram:
         await message.reply(
-            "❌Noto'g'ri link"
+            "❌Noto'g'ri link\n\n"
             "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi.\n"
             "Iltimos, Instagram video linkini yuboring."
         )
         return
     
-    # Yuklashni boshlash
+    # Yuklashni boshlash - FAQAT QUM SOAT (siz xohlagandek)
     status_msg = await message.reply("⏳")
     
     try:
@@ -223,7 +219,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
             except Exception as e:
                 logger.error(f"Keshdan olishda xatolik: {e}")
         
-        # Yangi video yuklash
+        # Yangi video yuklash - FAQAT QUM SOAT (siz xohlagandek)
         await status_msg.edit_text("⏳")
         
         # To'g'ri funksiya nomi: download_instagram_video
@@ -232,14 +228,9 @@ async def handle_instagram_link(message: Message, state: FSMContext):
         if error:
             # Xato turiga qarab xabar
             if "50MB dan katta" in error:
-                await status_msg.edit_text(
-                    "❌Video hajmi juda katta!"               )
+                await status_msg.edit_text("❌Video hajmi juda katta!")
             elif "mavjud emas" in error or "o'chirilgan" in error:
-                await status_msg.edit_text(
-                    "❌Video topilmadi!\n\n"
-                    "Bu video mavjud emas yoki o'chirilgan.\n"
-                    "Iltimos, boshqa link yuboring."
-                )
+                await status_msg.edit_text("❌Video topilmadi!\n\nBu video mavjud emas yoki o'chirilgan.\nIltimos, boshqa link yuboring.")
             else:
                 await status_msg.edit_text(f"❌ {error}")
             return
@@ -274,12 +265,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
         
     except Exception as e:
         logger.error(f"Xatolik: {e}")
-        await status_msg.edit_text(
-            "⚠️ **Kutilmagan xatolik!**\n\n"
-            "Videoni yuklashda muammo yuz berdi.\n"
-            "Iltimos, qaytadan urinib ko'ring.\n\n"
-            "Agar muammo takrorlansa, boshqa link yuboring."
-        )
+        await status_msg.edit_text("⚠️ Kutilmagan xatolik! Iltimos, qaytadan urinib ko'ring.")
 
 @dp.message()
 async def handle_unknown(message: Message):
@@ -287,7 +273,7 @@ async def handle_unknown(message: Message):
     await message.reply(
         "❌ Noto'g'ri buyruq!\n\n"
         "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi.\n"
-        "Iltimos, Instagram video linkini yuboring.\n\n"
+        "Iltimos, Instagram video linkini yuboring."
     )
 
 # ========== MAJBURIY OBUNA CHECK ==========
@@ -341,7 +327,7 @@ async def check_subscription_callback(callback: CallbackQuery):
         await callback.message.delete()
         await callback.message.answer(
             "✅ Obuna tasdiqlandi!\n\n"
-            "Endi Instagram videolarini yuklab olishingiz mumkin.\n"
+            "Endi Instagram videolarini yuklab olishingiz mumkin."
         )
         await callback.answer("Obuna tasdiqlandi!", show_alert=True)
 
