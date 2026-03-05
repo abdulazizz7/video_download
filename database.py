@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Database:
-    def __init__(self, db_path: str):
+    def __init__(self, db_path: str = "D:/topldibot_database.db"):
         self.db_path = db_path
     
     async def init_db(self):
@@ -84,8 +84,19 @@ class Database:
                 )
             ''')
             
+            # Musiqa yuklamalar (agar kerak bo'lsa)
+            await db.execute('''
+                CREATE TABLE IF NOT EXISTS music_downloads (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    query TEXT,
+                    title TEXT,
+                    downloaded_at TIMESTAMP
+                )
+            ''')
+            
             await db.commit()
-            logger.info("Ma'lumotlar bazasi muvaffaqiyatli yaratildi")
+            logger.info(f"✅ Ma'lumotlar bazasi yaratildi: {self.db_path}")
     
     # ========== USER METHODS ==========
     async def add_user(self, user_id: int, username: str, first_name: str, last_name: str = None):
@@ -319,6 +330,26 @@ class Database:
             )
             await db.commit()
             return False  # Limitdan oshmagan
+    
+    # ========== MUSIQA STATISTIKASI ==========
+    async def add_music_download(self, user_id: int, query: str, title: str = None):
+        """Musiqa yuklash tarixiga qo'shish"""
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.execute('''
+                INSERT INTO music_downloads (user_id, query, title, downloaded_at)
+                VALUES (?, ?, ?, ?)
+            ''', (user_id, query, title, datetime.now()))
+            await db.commit()
+    
+    async def get_user_music_count(self, user_id: int) -> int:
+        """Foydalanuvchining musiqa yuklamalari soni"""
+        async with aiosqlite.connect(self.db_path) as db:
+            cursor = await db.execute(
+                'SELECT COUNT(*) FROM music_downloads WHERE user_id = ?',
+                (user_id,)
+            )
+            row = await cursor.fetchone()
+            return row[0] if row else 0
     
     # ========== STATISTICS METHODS ==========
     async def get_downloads_by_platform(self) -> Dict[str, int]:

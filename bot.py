@@ -1,11 +1,12 @@
 import logging
 import asyncio
 import re
+import os
 from datetime import datetime
 from contextlib import suppress
 
 from aiogram import Bot, Dispatcher, F
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -30,8 +31,8 @@ bot = Bot(token=BOT_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
-# Database
-db = Database('bot_database.db')
+# Database (D diskida)
+db = Database('D:/topldibot_database.db')
 
 # Video downloader
 downloader = VideoDownloader(bot, SECRET_GROUP_ID)
@@ -60,24 +61,24 @@ async def start_command(message: Message):
     
     text = (
         f"👋 Salom, {user.first_name}! Xush kelibsiz!\n\n"
-        "🤖 Men — TopildiSaveBot\n"
+        "🤖 Men — **TopildiSaveBot**\n"
         "Instagram platformasida sizga video va reels larni tez yuklab beraman\n\n"
-        "⚡️Qanday ishlayman?\n"
+        "⚡️ **Qanday ishlayman?**\n"
         "1️⃣ Instagram'dan video linkini nusxa oling\n"
         "2️⃣ Menga tashlang\n"
         "3️⃣ Men bir zumda yuklab beraman\n\n"
-        "📥 Yuklaydigan formatlar:\n"
+        "📥 **Yuklaydigan formatlar:**\n"
         "• 📱 Post (foto/video)\n"
-        "• 🎬 Reel (qisqa video)\n"
-        "🔥Tezlik:\n"
+        "• 🎬 Reel (qisqa video)\n\n"
+        "🔥 **Tezlik:**\n"
         "• Birinchi marta: 5-10 soniya\n"
         "• Keyingi marta: 1-2 soniya\n\n"
-        "✨Qulayliklar:\n"
+        "✨ **Qulayliklar:**\n"
         "• ✅ Bepul va cheksiz\n"
         "• ✅ Yuqori sifat (1080p)\n"
         "• ✅ Ortiqcha reklamalar yo'q\n\n"
-        "⚠️Faqat Instagram linklari qabul qilinadi!\n\n"
-        "Endi menga link tashlang!"
+        "⚠️ **Faqat Instagram linklari qabul qilinadi!**\n\n"
+        "Endi menga link tashlang! 👇"
     )
     
     await message.reply(text, parse_mode="Markdown")
@@ -86,7 +87,11 @@ async def start_command(message: Message):
 async def help_command(message: Message):
     """Yordam komandasi"""
     text = (
-        "👨‍💻Admin: @azbeyy"
+        "👨‍💻 **Admin:** @azbeyy\n\n"
+        "📌 **Buyruqlar:**\n"
+        "/start - Botni ishga tushirish\n"
+        "/stats - Statistikangiz\n"
+        "/help - Yordam"
     )
     await message.reply(text, parse_mode="Markdown")
 
@@ -99,10 +104,11 @@ async def user_stats(message: Message):
         return
     
     await message.reply(
-        f"📊 Sizning statistikangiz\n\n"
+        f"📊 **Sizning statistikangiz**\n\n"
         f"📥 Yuklagan videolaringiz: {user['total_downloads']}\n"
         f"🕐 Qo'shilgan sana: {user['joined_date'][:10] if user['joined_date'] else 'N/A'}\n"
-        f"📅 Oxirgi faollik: {user['last_activity'][:10] if user['last_activity'] else 'N/A'}"
+        f"📅 Oxirgi faollik: {user['last_activity'][:10] if user['last_activity'] else 'N/A'}",
+        parse_mode="Markdown"
     )
 
 @dp.message(Command("cancel"))
@@ -156,14 +162,14 @@ async def handle_instagram_link(message: Message, state: FSMContext):
         return
     
     url = message.text.strip()
-    logger.info(f"Link keldi: {url}")
+    logger.info(f"🔗 Link keldi: {url}")
     
     # Aktivlikni yangilash
     await db.update_activity(message.from_user.id)
     
     # Link borligini tekshirish
     if not re.search(r'https?://', url):
-        await message.reply("❌Xato\n\nBu link emas. Iltimos, Instagram video linkini yuboring.")
+        await message.reply("❌ **Xato!**\n\nBu link emas. Iltimos, Instagram video linkini yuboring.")
         return
     
     # FAQAT INSTAGRAM linklarini tekshirish
@@ -181,13 +187,14 @@ async def handle_instagram_link(message: Message, state: FSMContext):
     
     if not is_instagram:
         await message.reply(
-            "❌Noto'g'ri link\n\n"
-            "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi.\n"
-            "Iltimos, Instagram video linkini yuboring."
+            "❌ **Noto'g'ri link!**\n\n"
+            "Bu bot **FAQAT INSTAGRAM** videolarini yuklab beradi.\n"
+            "Iltimos, Instagram video linkini yuboring.\n\n"
+            "Misol: `https://www.instagram.com/reel/xxxxx/`"
         )
         return
     
-    # Yuklashni boshlash - FAQAT QUM SOAT (siz xohlagandek)
+    # Yuklashni boshlash
     status_msg = await message.reply("⏳")
     
     try:
@@ -203,7 +210,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
                 if file_id:
                     await message.reply_video(
                         video=file_id,
-                        caption=f"📥 @TopildiSaveBot orqali yuklab olindi.",
+                        caption=f"📥 @TopildiSaveBot orqali yuklab olindi (keshlangan)",
                         supports_streaming=True
                     )
                     
@@ -219,61 +226,67 @@ async def handle_instagram_link(message: Message, state: FSMContext):
             except Exception as e:
                 logger.error(f"Keshdan olishda xatolik: {e}")
         
-        # Yangi video yuklash - FAQAT QUM SOAT (siz xohlagandek)
-        await status_msg.edit_text("⏳")
+        # Yangi video yuklash
+        await status_msg.edit_text("⏳ Yuklanmoqda...")
         
-        # To'g'ri funksiya nomi: download_instagram_video
-        file_id, error = await downloader.download_instagram_video(url)
+        # Videoni yuklab olish
+        file_path, error = await downloader.download_instagram_video(url)
         
         if error:
-            # Xato turiga qarab xabar
-            if "50MB dan katta" in error:
-                await status_msg.edit_text("❌Video hajmi juda katta!")
-            elif "mavjud emas" in error or "o'chirilgan" in error:
-                await status_msg.edit_text("❌Video topilmadi!\n\nBu video mavjud emas yoki o'chirilgan.\nIltimos, boshqa link yuboring.")
-            else:
-                await status_msg.edit_text(f"❌ {error}")
+            await status_msg.edit_text(error)
             return
         
-        await status_msg.edit_text("📤 Video yuborilmoqda...")
-        
-        await message.reply_video(
-            video=file_id,
-            caption=f"@TopildiSaveBot orqali yuklab olindi",
-            supports_streaming=True
-        )
-        
-        try:
-            await db.add_video(
+        if file_path and os.path.exists(file_path):
+            # Faylni yuborish
+            video_file = FSInputFile(file_path)
+            await message.reply_video(
+                video=video_file,
+                caption=f"📥 @TopildiSaveBot orqali yuklab olindi",
+                supports_streaming=True
+            )
+            
+            # Faylni o'chirish
+            try:
+                os.remove(file_path)
+                logger.info(f"🗑 Vaqtinchalik fayl o'chirildi: {file_path}")
+            except Exception as e:
+                logger.error(f"Faylni o'chirishda xatolik: {e}")
+            
+            # Bazaga qo'shish
+            try:
+                await db.add_video(
+                    video_url=url,
+                    platform='instagram',
+                    video_id=url.split('/')[-1][:50],
+                    file_id="local_file",
+                    group_message_id=0
+                )
+            except Exception as e:
+                logger.error(f"Videoni bazaga qo'shishda xatolik: {e}")
+            
+            await db.add_download(
+                user_id=message.from_user.id,
                 video_url=url,
                 platform='instagram',
-                video_id=url.split('/')[-1][:50],
-                file_id=file_id,
-                group_message_id=0
+                from_cache=False
             )
-        except Exception as e:
-            logger.error(f"Videoni bazaga qo'shishda xatolik: {e}")
-        
-        await db.add_download(
-            user_id=message.from_user.id,
-            video_url=url,
-            platform='instagram',
-            from_cache=False
-        )
-        
-        await status_msg.delete()
+            
+            await status_msg.delete()
+        else:
+            await status_msg.edit_text("❌ Video fayli topilmadi")
         
     except Exception as e:
-        logger.error(f"Xatolik: {e}")
+        logger.error(f"❌ Xatolik: {e}")
         await status_msg.edit_text("⚠️ Kutilmagan xatolik! Iltimos, qaytadan urinib ko'ring.")
 
 @dp.message()
 async def handle_unknown(message: Message):
     """Noma'lum xabarlar"""
     await message.reply(
-        "❌ Noto'g'ri buyruq!\n\n"
-        "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi.\n"
-        "Iltimos, Instagram video linkini yuboring."
+        "❌ **Noto'g'ri buyruq!**\n\n"
+        "Bu bot **FAQAT INSTAGRAM** videolarini yuklab beradi.\n"
+        "Iltimos, Instagram video linkini yuboring.\n\n"
+        "Misol: `https://www.instagram.com/reel/xxxxx/`"
     )
 
 # ========== MAJBURIY OBUNA CHECK ==========
@@ -326,7 +339,7 @@ async def check_subscription_callback(callback: CallbackQuery):
     else:
         await callback.message.delete()
         await callback.message.answer(
-            "✅ Obuna tasdiqlandi!\n\n"
+            "✅ **Obuna tasdiqlandi!**\n\n"
             "Endi Instagram videolarini yuklab olishingiz mumkin."
         )
         await callback.answer("Obuna tasdiqlandi!", show_alert=True)
@@ -334,6 +347,11 @@ async def check_subscription_callback(callback: CallbackQuery):
 async def on_startup():
     """Bot ishga tushganda"""
     logger.info("🚀 Bot ishga tushmoqda...")
+    
+    # D:/temp papkasini yaratish
+    if not os.path.exists("D:/temp"):
+        os.makedirs("D:/temp")
+        logger.info("📁 D:/temp papkasi yaratildi")
     
     # Ma'lumotlar bazasini yaratish
     await db.init_db()
@@ -354,6 +372,12 @@ async def on_startup():
     except Exception as e:
         logger.error(f"❌ Maxfiy guruhga ulanishda xatolik: {e}")
         logger.warning("⚠️ Iltimos, botni maxfiy guruhga admin qiling! ID: " + str(SECRET_GROUP_ID))
+    
+    # Cookies faylini tekshirish
+    if os.path.exists("cookies.txt"):
+        logger.info("✅ Cookies fayli topildi")
+    else:
+        logger.warning("❌ Cookies fayli topilmadi! Instagram video yuklanmasligi mumkin.")
     
     logger.info("✅ Bot muvaffaqiyatli ishga tushdi! 🎉")
 
