@@ -18,7 +18,7 @@ class VideoDownloader:
         self.downloading = set()
         self.download_lock = asyncio.Lock()
         
-    async def download_instagram_video(self, url: str) -> Tuple[Optional[str], Optional[str]]:
+    async def download_instagram_video(self, url: str) -> Tuple[Optional[str], Optional[str], Optional[int]]:
         """Faqat Instagram videoni yuklab olish va kesh uchun guruhga yuborish"""
         
         if url in self.downloading:
@@ -76,18 +76,18 @@ class VideoDownloader:
                     logger.error(f"❌ Yuklab olishda xatolik: {error_msg}")
                     
                     if "Unsupported URL" in error_msg:
-                        return None, "❌ Noto'g'ri Instagram linki"
+                        return None, "❌ Noto'g'ri Instagram linki", None
                     elif "Video unavailable" in error_msg:
-                        return None, "❌ Video mavjud emas yoki o'chirilgan"
+                        return None, "❌ Video mavjud emas yoki o'chirilgan", None
                     elif "Private" in error_msg:
-                        return None, "❌ Video shaxsiy (private) profilda"
+                        return None, "❌ Video shaxsiy (private) profilda", None
                     elif "login" in error_msg.lower() or "cookies" in error_msg.lower():
-                        return None, "❌ Instagram login talab qiladi. Iltimos, cookies.txt faylini tekshiring."
+                        return None, "❌ Instagram login talab qiladi. Iltimos, cookies.txt faylini tekshiring.", None
                     else:
-                        return None, f"❌ Yuklab olishda xatolik: {error_msg[:100]}"
+                        return None, f"❌ Yuklab olishda xatolik: {error_msg[:100]}", None
                 
                 if not os.path.exists(temp_filename):
-                    return None, "❌ Video fayli topilmadi"
+                    return None, "❌ Video fayli topilmadi", None
                 
                 # Fayl hajmini tekshirish (50MB limit)
                 file_size = os.path.getsize(temp_filename)
@@ -95,11 +95,10 @@ class VideoDownloader:
                 
                 if file_size > 50 * 1024 * 1024:
                     os.remove(temp_filename)
-                    return None, "❌ Video hajmi 50MB dan katta"
+                    return None, "❌ Video hajmi 50MB dan katta", None
                 
-                # --- KESH TIZIMI UCHUN MUHIM QISM ---
+                # Videoni maxfiy guruhga yuborish (kesh uchun)
                 try:
-                    # Videoni maxfiy guruhga yuborish (kesh uchun)
                     logger.info(f"📤 Videoni maxfiy guruhga yuborish: {self.secret_group_id}")
                     video_file = FSInputFile(temp_filename)
                     group_message = await self.bot.send_video(
@@ -117,19 +116,17 @@ class VideoDownloader:
                     # Vaqtinchalik faylni o'chirish
                     os.remove(temp_filename)
                     
-                    # File ID ni qaytarish (foydalanuvchiga yuborish uchun)
-                    logger.info(f"🎯 Foydalanuvchiga yuborish uchun File ID: {file_id}")
-                    return file_id, None  # File ID qaytariladi
+                    # 3 ta qiymat qaytarish: file_id, error, group_message_id
+                    return file_id, None, group_message_id
                     
                 except Exception as e:
                     logger.error(f"❌ Guruhga yuborishda xatolik: {e}")
                     # Agar guruhga yuborib bo'lmasa, to'g'ridan-to'g'ri fayldan yuborish
-                    logger.info("📤 To'g'ridan-to'g'ri fayldan yuborish")
-                    return temp_filename, None  # Fayl nomini qaytar
+                    return temp_filename, None, None
                 
             except Exception as e:
                 logger.error(f"❌ Instagram video yuklashda xatolik: {e}")
-                return None, f"❌ Xatolik: {str(e)[:100]}"
+                return None, f"❌ Xatolik: {str(e)[:100]}", None
             finally:
                 if url in self.downloading:
                     self.downloading.remove(url)

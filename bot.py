@@ -87,7 +87,7 @@ async def start_command(message: Message):
 async def help_command(message: Message):
     """Yordam komandasi"""
     text = (
-        "👨‍💻 **Admin:** @azbeyy\n\n"
+        "👨‍💻 **Admin:** @azbeyy"
     )
     await message.reply(text, parse_mode="Markdown")
 
@@ -100,7 +100,7 @@ async def user_stats(message: Message):
         return
     
     await message.reply(
-        f"📊 **Sizning statistikangiz**\n\n"
+        f"📊 Sizning statistikangiz\n\n"
         f"📥 Yuklagan videolaringiz: {user['total_downloads']}\n"
         f"🕐 Qo'shilgan sana: {user['joined_date'][:10] if user['joined_date'] else 'N/A'}\n"
         f"📅 Oxirgi faollik: {user['last_activity'][:10] if user['last_activity'] else 'N/A'}",
@@ -184,7 +184,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
     if not is_instagram:
         await message.reply(
             "❌ Noto'g'ri link!\n\n"
-            "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi."
+            "Bu bot faqat instagramdan videolarini yuklab beradi."
         )
         return
     
@@ -192,14 +192,19 @@ async def handle_instagram_link(message: Message, state: FSMContext):
     status_msg = await message.reply("⏳")
     
     try:
-        # Bazada video borligini tekshirish
+        # BAZADA VIDEO BORLIGINI TEKSHIRISH (KESH)
         cached_video = await db.get_video(url)
         
-        if cached_video and cached_video.get('group_message_id') and cached_video['group_message_id'] != 0:
+        if cached_video:
             await status_msg.edit_text("⚡️ Video tayyor, yuborilmoqda...")
             
             try:
-                file_id = await downloader.get_video_from_group(cached_video['group_message_id'])
+                # Bazadan file_id ni olish
+                file_id = cached_video.get('file_id')
+                
+                # Agar file_id bo'lmasa yoki eskirgan bo'lsa, guruhdan olish
+                if not file_id and cached_video.get('group_message_id'):
+                    file_id = await downloader.get_video_from_group(cached_video['group_message_id'])
                 
                 if file_id:
                     await message.reply_video(
@@ -217,50 +222,39 @@ async def handle_instagram_link(message: Message, state: FSMContext):
                     
                     await status_msg.delete()
                     return
+                else:
+                    logger.warning("Keshda video topilmadi, qayta yuklanmoqda")
             except Exception as e:
                 logger.error(f"Keshdan olishda xatolik: {e}")
         
-        # Yangi video yuklash
-        await status_msg.edit_text("⏳ Yuklanmoqda...")
+        # YANGI VIDEO YUKLASH
+        await status_msg.edit_text("⏳")
         
-        # Videoni yuklab olish
-        result, error = await downloader.download_instagram_video(url)
+        # 3 ta qiymat qaytadi: file_id, error, group_message_id
+        file_id, error, group_message_id = await downloader.download_instagram_video(url)
         
         if error:
             await status_msg.edit_text(error)
             return
         
-        # result - bu yoki file_id (str) yoki fayl nomi (str)
-        if result:
-            if os.path.exists(result):  # Agar fayl nomi bo'lsa
-                video_file = FSInputFile(result)
-                await message.reply_video(
-                    video=video_file,
-                    caption=f"📥 @TopildiSaveBot orqali yuklab olindi",
-                    supports_streaming=True
-                )
-                # Faylni o'chirish
-                try:
-                    os.remove(result)
-                    logger.info(f"🗑 Vaqtinchalik fayl o'chirildi: {result}")
-                except:
-                    pass
-            else:  # Agar file_id bo'lsa
-                await message.reply_video(
-                    video=result,
-                    caption=f"📥 @TopildiSaveBot orqali yuklab olindi",
-                    supports_streaming=True
-                )
+        if file_id:
+            # File ID bilan video yuborish
+            await message.reply_video(
+                video=file_id,
+                caption=f"📥 @TopildiSaveBot orqali yuklab olindi",
+                supports_streaming=True
+            )
             
-            # Bazaga qo'shish
+            # BAZAGA QO'SHISH (group_message_id bilan)
             try:
                 await db.add_video(
                     video_url=url,
                     platform='instagram',
                     video_id=url.split('/')[-1][:50],
-                    file_id=result if not os.path.exists(result) else "local_file",
-                    group_message_id=0
+                    file_id=file_id,
+                    group_message_id=group_message_id if group_message_id else 0
                 )
+                logger.info(f"✅ Video bazaga qo'shildi. Group Message ID: {group_message_id}")
             except Exception as e:
                 logger.error(f"Videoni bazaga qo'shishda xatolik: {e}")
             
@@ -284,7 +278,7 @@ async def handle_unknown(message: Message):
     """Noma'lum xabarlar"""
     await message.reply(
         "❌ Noto'g'ri buyruq!\n\n"
-        "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi.\n"
+        "Bu bot faqat instagramdan videolarini yuklab beradi.\n"
     )
 
 # ========== MAJBURIY OBUNA CHECK ==========
