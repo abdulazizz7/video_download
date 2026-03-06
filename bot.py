@@ -87,7 +87,11 @@ async def start_command(message: Message):
 async def help_command(message: Message):
     """Yordam komandasi"""
     text = (
-        "👨‍💻 Admin: @azbeyy"
+        "👨‍💻 Admin: @azbeyy\n\n"
+        "📌 Buyruqlar:\n"
+        "/start - Botni ishga tushirish\n"
+        "/stats - Statistikangiz\n"
+        "/help - Yordam"
     )
     await message.reply(text)
 
@@ -183,7 +187,9 @@ async def handle_instagram_link(message: Message, state: FSMContext):
     if not is_instagram:
         await message.reply(
             "❌ Noto'g'ri link!\n\n"
-            "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi."
+            "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi.\n"
+            "Iltimos, Instagram video linkini yuboring.\n\n"
+            "Misol: https://www.instagram.com/reel/xxxxx/"
         )
         return
     
@@ -195,8 +201,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
         cached_video = await db.get_video(url)
         
         if cached_video:
-            await status_msg.edit_text("⏳")
-            
+            # Keshdan olish
             try:
                 # Bazadan file_id ni olish
                 file_id = cached_video.get('file_id')
@@ -227,8 +232,6 @@ async def handle_instagram_link(message: Message, state: FSMContext):
                 logger.error(f"Keshdan olishda xatolik: {e}")
         
         # YANGI VIDEO YUKLASH
-        await status_msg.edit_text("⏳")
-        
         # 3 ta qiymat qaytadi: file_id, error, group_message_id
         file_id, error, group_message_id = await downloader.download_instagram_video(url)
         
@@ -266,18 +269,20 @@ async def handle_instagram_link(message: Message, state: FSMContext):
             
             await status_msg.delete()
         else:
-            await status_msg.edit_text("❌ Video fayli topilmadi")
+            await message.reply("❌ Video yuklanmadi")
         
     except Exception as e:
         logger.error(f"Xatolik: {e}")
-        await status_msg.edit_text("⚠️ Kutilmagan xatolik! Iltimos, qaytadan urinib ko'ring.")
+        await message.reply("⚠️ Kutilmagan xatolik! Iltimos, qaytadan urinib ko'ring.")
 
 @dp.message()
 async def handle_unknown(message: Message):
     """Noma'lum xabarlar"""
     await message.reply(
         "❌ Noto'g'ri buyruq!\n\n"
-        "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi."
+        "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi.\n"
+        "Iltimos, Instagram video linkini yuboring.\n\n"
+        "Misol: https://www.instagram.com/reel/xxxxx/"
     )
 
 # ========== MAJBURIY OBUNA CHECK ==========
