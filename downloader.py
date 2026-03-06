@@ -118,7 +118,8 @@ class VideoDownloader:
                     os.remove(temp_filename)
                     
                     # File ID ni qaytarish (foydalanuvchiga yuborish uchun)
-                    return file_id, None
+                    logger.info(f"🎯 Foydalanuvchiga yuborish uchun File ID: {file_id}")
+                    return file_id, None  # File ID qaytariladi
                     
                 except Exception as e:
                     logger.error(f"❌ Guruhga yuborishda xatolik: {e}")
