@@ -88,10 +88,6 @@ async def help_command(message: Message):
     """Yordam komandasi"""
     text = (
         "👨‍💻 **Admin:** @azbeyy\n\n"
-        "📌 **Buyruqlar:**\n"
-        "/start - Botni ishga tushirish\n"
-        "/stats - Statistikangiz\n"
-        "/help - Yordam"
     )
     await message.reply(text, parse_mode="Markdown")
 
@@ -169,7 +165,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
     
     # Link borligini tekshirish
     if not re.search(r'https?://', url):
-        await message.reply("❌ **Xato!**\n\nBu link emas. Iltimos, Instagram video linkini yuboring.")
+        await message.reply("❌ Xato!\n\nBu link emas. Iltimos, Instagram video linkini yuboring.")
         return
     
     # FAQAT INSTAGRAM linklarini tekshirish
@@ -187,10 +183,8 @@ async def handle_instagram_link(message: Message, state: FSMContext):
     
     if not is_instagram:
         await message.reply(
-            "❌ **Noto'g'ri link!**\n\n"
-            "Bu bot **FAQAT INSTAGRAM** videolarini yuklab beradi.\n"
-            "Iltimos, Instagram video linkini yuboring.\n\n"
-            "Misol: `https://www.instagram.com/reel/xxxxx/`"
+            "❌ Noto'g'ri link!\n\n"
+            "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi."
         )
         return
     
@@ -210,7 +204,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
                 if file_id:
                     await message.reply_video(
                         video=file_id,
-                        caption=f"📥 @TopildiSaveBot orqali yuklab olindi (keshlangan)",
+                        caption=f"📥 @TopildiSaveBot orqali yuklab olindi",
                         supports_streaming=True
                     )
                     
@@ -230,27 +224,33 @@ async def handle_instagram_link(message: Message, state: FSMContext):
         await status_msg.edit_text("⏳ Yuklanmoqda...")
         
         # Videoni yuklab olish
-        file_path, error = await downloader.download_instagram_video(url)
+        result, error = await downloader.download_instagram_video(url)
         
         if error:
             await status_msg.edit_text(error)
             return
         
-        if file_path and os.path.exists(file_path):
-            # Faylni yuborish
-            video_file = FSInputFile(file_path)
-            await message.reply_video(
-                video=video_file,
-                caption=f"📥 @TopildiSaveBot orqali yuklab olindi",
-                supports_streaming=True
-            )
-            
-            # Faylni o'chirish
-            try:
-                os.remove(file_path)
-                logger.info(f"🗑 Vaqtinchalik fayl o'chirildi: {file_path}")
-            except Exception as e:
-                logger.error(f"Faylni o'chirishda xatolik: {e}")
+        # result - bu yoki file_id (str) yoki fayl nomi (str)
+        if result:
+            if os.path.exists(result):  # Agar fayl nomi bo'lsa
+                video_file = FSInputFile(result)
+                await message.reply_video(
+                    video=video_file,
+                    caption=f"📥 @TopildiSaveBot orqali yuklab olindi",
+                    supports_streaming=True
+                )
+                # Faylni o'chirish
+                try:
+                    os.remove(result)
+                    logger.info(f"🗑 Vaqtinchalik fayl o'chirildi: {result}")
+                except:
+                    pass
+            else:  # Agar file_id bo'lsa
+                await message.reply_video(
+                    video=result,
+                    caption=f"📥 @TopildiSaveBot orqali yuklab olindi",
+                    supports_streaming=True
+                )
             
             # Bazaga qo'shish
             try:
@@ -258,7 +258,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
                     video_url=url,
                     platform='instagram',
                     video_id=url.split('/')[-1][:50],
-                    file_id="local_file",
+                    file_id=result if not os.path.exists(result) else "local_file",
                     group_message_id=0
                 )
             except Exception as e:
@@ -283,10 +283,8 @@ async def handle_instagram_link(message: Message, state: FSMContext):
 async def handle_unknown(message: Message):
     """Noma'lum xabarlar"""
     await message.reply(
-        "❌ **Noto'g'ri buyruq!**\n\n"
-        "Bu bot **FAQAT INSTAGRAM** videolarini yuklab beradi.\n"
-        "Iltimos, Instagram video linkini yuboring.\n\n"
-        "Misol: `https://www.instagram.com/reel/xxxxx/`"
+        "❌ Noto'g'ri buyruq!\n\n"
+        "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi.\n"
     )
 
 # ========== MAJBURIY OBUNA CHECK ==========
@@ -339,7 +337,7 @@ async def check_subscription_callback(callback: CallbackQuery):
     else:
         await callback.message.delete()
         await callback.message.answer(
-            "✅ **Obuna tasdiqlandi!**\n\n"
+            "✅ Obuna tasdiqlandi!\n\n"
             "Endi Instagram videolarini yuklab olishingiz mumkin."
         )
         await callback.answer("Obuna tasdiqlandi!", show_alert=True)
