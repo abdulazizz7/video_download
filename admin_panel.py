@@ -48,9 +48,8 @@ class AdminPanel:
             ])
             
             await message.reply(
-                "👑 **Admin Panel**\n\nKerakli bo'limni tanlang:",
-                reply_markup=keyboard,
-                parse_mode="Markdown"
+                "👑 Admin Panel\n\nKerakli bo'limni tanlang:",
+                reply_markup=keyboard
             )
         
         @self.dp.callback_query(F.data.startswith("admin_"))
@@ -108,6 +107,7 @@ class AdminPanel:
             await callback.answer()
     
     async def _show_main_menu(self, message: Message):
+        """Asosiy menyu"""
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="📊 Statistika", callback_data="admin_stats"),
              InlineKeyboardButton(text="👥 Foydalanuvchilar", callback_data="admin_users")],
@@ -120,12 +120,12 @@ class AdminPanel:
             [InlineKeyboardButton(text="❌ Chiqish", callback_data="admin_exit")]
         ])
         await message.edit_text(
-            "👑 **Admin Panel**\n\nKerakli bo'limni tanlang:",
-            reply_markup=keyboard,
-            parse_mode="Markdown"
+            "👑 Admin Panel\n\nKerakli bo'limni tanlang:",
+            reply_markup=keyboard
         )
     
     async def _show_stats(self, callback: CallbackQuery):
+        """Statistika"""
         total_users = await self.db.get_user_count()
         daily_active = await self.db.get_active_users('day')
         weekly_active = await self.db.get_active_users('week')
@@ -133,7 +133,7 @@ class AdminPanel:
         total_downloads = await self.db.get_total_downloads()
         
         text = (
-            "📊 **Statistika**\n\n"
+            f"📊 Statistika\n\n"
             f"👥 Umumiy foydalanuvchilar: {total_users}\n"
             f"📅 Kunlik aktiv: {daily_active}\n"
             f"📆 Haftalik aktiv: {weekly_active}\n"
@@ -145,11 +145,12 @@ class AdminPanel:
             [InlineKeyboardButton(text="◀️ Orqaga", callback_data="admin_back")]
         ])
         
-        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="Markdown")
+        await callback.message.edit_text(text, reply_markup=keyboard)
     
     async def _show_users(self, callback: CallbackQuery):
+        """Foydalanuvchilar"""
         users = await self.db.get_all_users()
-        text = f"👥 **Foydalanuvchilar ({len(users)})**\n\n"
+        text = f"👥 Foydalanuvchilar ({len(users)})\n\n"
         
         for i, user in enumerate(users[:10], 1):
             username = f"@{user['username']}" if user['username'] else "No username"
@@ -164,33 +165,30 @@ class AdminPanel:
             [InlineKeyboardButton(text="◀️ Orqaga", callback_data="admin_back")]
         ])
         
-        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="Markdown")
+        await callback.message.edit_text(text, reply_markup=keyboard)
     
     async def _start_broadcast(self, callback: CallbackQuery, state: FSMContext):
         await state.set_state(AdminStates.waiting_for_broadcast)
         await callback.message.edit_text(
-            "📢 **Oddiy xabar yuborish**\n\nBarcha foydalanuvchilarga yubormoqchi bo'lgan xabaringizni yozing:\n(Bekor qilish uchun /cancel yozing)",
-            parse_mode="Markdown"
+            "📢 Oddiy xabar yuborish\n\nBarcha foydalanuvchilarga yubormoqchi bo'lgan xabaringizni yozing:\n(Bekor qilish uchun /cancel yozing)"
         )
     
     async def _start_forward(self, callback: CallbackQuery, state: FSMContext):
         await state.set_state(AdminStates.waiting_for_forward)
         await callback.message.edit_text(
-            "📢 **Forward xabar yuborish**\n\nBarcha foydalanuvchilarga forward qilmoqchi bo'lgan xabaringizni yuboring:\n(Bekor qilish uchun /cancel yozing)",
-            parse_mode="Markdown"
+            "📢 Forward xabar yuborish\n\nBarcha foydalanuvchilarga forward qilmoqchi bo'lgan xabaringizni yuboring:\n(Bekor qilish uchun /cancel yozing)"
         )
     
     async def _start_inline(self, callback: CallbackQuery, state: FSMContext):
         await state.set_state(AdminStates.waiting_for_inline)
         await callback.message.edit_text(
-            "📢 **Tugmali xabar yuborish**\n\nXabarni yozing va tugmalarni quyidagi formatda qo'shing:\nMatn|Tugma1:link1,Tugma2:link2\n\nMisol:\nSalom|Kanal:https://t.me/kanal,Sayt:https://example.com\n\n(Bekor qilish uchun /cancel yozing)",
-            parse_mode="Markdown"
+            "📢 Tugmali xabar yuborish\n\nXabarni yozing va tugmalarni quyidagi formatda qo'shing:\nMatn|Tugma1:link1,Tugma2:link2\n\nMisol:\nSalom|Kanal:https://t.me/kanal,Sayt:https://example.com\n\n(Bekor qilish uchun /cancel yozing)"
         )
     
     async def _manage_channels(self, callback: CallbackQuery):
         channels = await self.db.get_channels()
         
-        text = "📢 **Kanallar**\n\n"
+        text = "📢 Kanallar\n\n"
         if not channels:
             text += "Hozircha kanallar mavjud emas."
         else:
@@ -209,12 +207,12 @@ class AdminPanel:
             [InlineKeyboardButton(text="◀️ Orqaga", callback_data="admin_back")]
         ])
         
-        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="Markdown")
+        await callback.message.edit_text(text, reply_markup=keyboard)
     
     async def _manage_admins(self, callback: CallbackQuery):
         admins = await self.db.get_admins()
         
-        text = "👤 **Adminlar**\n\n"
+        text = "👤 Adminlar\n\n"
         if not admins:
             text += "Hozircha adminlar mavjud emas."
         else:
@@ -234,20 +232,20 @@ class AdminPanel:
             [InlineKeyboardButton(text="◀️ Orqaga", callback_data="admin_back")]
         ])
         
-        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="Markdown")
+        await callback.message.edit_text(text, reply_markup=keyboard)
     
     async def _manage_force_join(self, callback: CallbackQuery):
         enabled = await self.db.is_force_join_enabled()
         channels = await self.db.get_channels()
         
         text = (
-            "⚙️ **Majburiy obuna sozlamalari**\n\n"
+            f"⚙️ Majburiy obuna sozlamalari\n\n"
             f"Holati: {'✅ Yoqilgan' if enabled else '❌ Ochirilgan'}\n"
             f"Kanallar soni: {len(channels)}\n\n"
         )
         
         if channels:
-            text += "**Kanallar:**\n"
+            text += "Kanallar:\n"
             for channel in channels:
                 text += f"• {channel['channel_title']}\n"
         
@@ -260,13 +258,12 @@ class AdminPanel:
             [InlineKeyboardButton(text="◀️ Orqaga", callback_data="admin_back")]
         ])
         
-        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="Markdown")
+        await callback.message.edit_text(text, reply_markup=keyboard)
     
     async def _add_channel_start(self, callback: CallbackQuery, state: FSMContext):
         await state.set_state(AdminStates.waiting_for_channel_add)
         await callback.message.edit_text(
-            "➕ **Kanal qo'shish**\n\nKanal ID sini yoki @username ni yuboring:\nMisol: @kanal_nomi yoki -1001234567890\n\n(Bekor qilish uchun /cancel yozing)",
-            parse_mode="Markdown"
+            "➕ Kanal qo'shish\n\nKanal ID sini yoki @username ni yuboring:\nMisol: @kanal_nomi yoki -1001234567890\n\n(Bekor qilish uchun /cancel yozing)"
         )
     
     async def _remove_channel_start(self, callback: CallbackQuery, state: FSMContext):
@@ -277,19 +274,18 @@ class AdminPanel:
         
         await state.set_state(AdminStates.waiting_for_channel_remove)
         
-        text = "➖ **Kanal o'chirish**\n\nO'chirmoqchi bo'lgan kanal ID sini yuboring:\n\n"
+        text = "➖ Kanal o'chirish\n\nO'chirmoqchi bo'lgan kanal ID sini yuboring:\n\n"
         for channel in channels:
             text += f"• {channel['channel_title']}: {channel['channel_id']}\n"
         
         text += "\n(Bekor qilish uchun /cancel yozing)"
         
-        await callback.message.edit_text(text, parse_mode="Markdown")
+        await callback.message.edit_text(text)
     
     async def _add_admin_start(self, callback: CallbackQuery, state: FSMContext):
         await state.set_state(AdminStates.waiting_for_admin_add)
         await callback.message.edit_text(
-            "➕ **Admin qo'shish**\n\nAdmin qilmoqchi bo'lgan foydalanuvchining ID sini yuboring:\nMisol: 123456789\n\n(Bekor qilish uchun /cancel yozing)",
-            parse_mode="Markdown"
+            "➕ Admin qo'shish\n\nAdmin qilmoqchi bo'lgan foydalanuvchining ID sini yuboring:\nMisol: 123456789\n\n(Bekor qilish uchun /cancel yozing)"
         )
     
     async def _remove_admin_start(self, callback: CallbackQuery, state: FSMContext):
@@ -300,7 +296,7 @@ class AdminPanel:
         
         await state.set_state(AdminStates.waiting_for_admin_remove)
         
-        text = "➖ **Admin o'chirish**\n\nO'chirmoqchi bo'lgan admin ID sini yuboring:\n\n"
+        text = "➖ Admin o'chirish\n\nO'chirmoqchi bo'lgan admin ID sini yuboring:\n\n"
         for admin_id in admins:
             user = await self.db.get_user(admin_id)
             if user:
@@ -310,7 +306,7 @@ class AdminPanel:
         
         text += "\n(Bekor qilish uchun /cancel yozing)"
         
-        await callback.message.edit_text(text, parse_mode="Markdown")
+        await callback.message.edit_text(text)
 
 
 # ========== State Handlerlar ==========
@@ -402,8 +398,7 @@ async def process_inline(message: Message, state: FSMContext, db: Database, bot:
                 await bot.send_message(
                     chat_id=user['user_id'],
                     text=text_part.strip(),
-                    reply_markup=keyboard,
-                    parse_mode="Markdown"
+                    reply_markup=keyboard
                 )
                 sent += 1
                 await asyncio.sleep(0.05)
