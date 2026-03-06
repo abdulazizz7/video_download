@@ -61,35 +61,35 @@ async def start_command(message: Message):
     
     text = (
         f"👋 Salom, {user.first_name}! Xush kelibsiz!\n\n"
-        "🤖 Men — **TopildiSaveBot**\n"
+        "🤖 Men — TopildiSaveBot\n"
         "Instagram platformasida sizga video va reels larni tez yuklab beraman\n\n"
-        "⚡️ **Qanday ishlayman?**\n"
+        "⚡️ Qanday ishlayman?\n"
         "1️⃣ Instagram'dan video linkini nusxa oling\n"
         "2️⃣ Menga tashlang\n"
         "3️⃣ Men bir zumda yuklab beraman\n\n"
-        "📥 **Yuklaydigan formatlar:**\n"
+        "📥 Yuklaydigan formatlar:\n"
         "• 📱 Post (foto/video)\n"
         "• 🎬 Reel (qisqa video)\n\n"
-        "🔥 **Tezlik:**\n"
+        "🔥 Tezlik:\n"
         "• Birinchi marta: 5-10 soniya\n"
         "• Keyingi marta: 1-2 soniya\n\n"
-        "✨ **Qulayliklar:**\n"
+        "✨ Qulayliklar:\n"
         "• ✅ Bepul va cheksiz\n"
         "• ✅ Yuqori sifat (1080p)\n"
         "• ✅ Ortiqcha reklamalar yo'q\n\n"
-        "⚠️ **Faqat Instagram linklari qabul qilinadi!**\n\n"
+        "⚠️ Faqat Instagram linklari qabul qilinadi!\n\n"
         "Endi menga link tashlang! 👇"
     )
     
-    await message.reply(text, parse_mode="Markdown")
+    await message.reply(text)
 
 @dp.message(Command("help"))
 async def help_command(message: Message):
     """Yordam komandasi"""
     text = (
-        "👨‍💻 **Admin:** @azbeyy"
+        "👨‍💻 Admin: @azbeyy"
     )
-    await message.reply(text, parse_mode="Markdown")
+    await message.reply(text)
 
 @dp.message(Command("stats"))
 async def user_stats(message: Message):
@@ -103,8 +103,7 @@ async def user_stats(message: Message):
         f"📊 Sizning statistikangiz\n\n"
         f"📥 Yuklagan videolaringiz: {user['total_downloads']}\n"
         f"🕐 Qo'shilgan sana: {user['joined_date'][:10] if user['joined_date'] else 'N/A'}\n"
-        f"📅 Oxirgi faollik: {user['last_activity'][:10] if user['last_activity'] else 'N/A'}",
-        parse_mode="Markdown"
+        f"📅 Oxirgi faollik: {user['last_activity'][:10] if user['last_activity'] else 'N/A'}"
     )
 
 @dp.message(Command("cancel"))
@@ -158,7 +157,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
         return
     
     url = message.text.strip()
-    logger.info(f"🔗 Link keldi: {url}")
+    logger.info(f"Link keldi: {url}")
     
     # Aktivlikni yangilash
     await db.update_activity(message.from_user.id)
@@ -184,11 +183,11 @@ async def handle_instagram_link(message: Message, state: FSMContext):
     if not is_instagram:
         await message.reply(
             "❌ Noto'g'ri link!\n\n"
-            "Bu bot faqat instagramdan videolarini yuklab beradi."
+            "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi."
         )
         return
     
-    # Yuklashni boshlash
+    # Yuklashni boshlash - FAQAT QUM SOAT
     status_msg = await message.reply("⏳")
     
     try:
@@ -196,7 +195,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
         cached_video = await db.get_video(url)
         
         if cached_video:
-            await status_msg.edit_text("⚡️ Video tayyor, yuborilmoqda...")
+            await status_msg.edit_text("⏳")
             
             try:
                 # Bazadan file_id ni olish
@@ -254,7 +253,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
                     file_id=file_id,
                     group_message_id=group_message_id if group_message_id else 0
                 )
-                logger.info(f"✅ Video bazaga qo'shildi. Group Message ID: {group_message_id}")
+                logger.info(f"✅ Video bazaga qo'shildi")
             except Exception as e:
                 logger.error(f"Videoni bazaga qo'shishda xatolik: {e}")
             
@@ -270,7 +269,7 @@ async def handle_instagram_link(message: Message, state: FSMContext):
             await status_msg.edit_text("❌ Video fayli topilmadi")
         
     except Exception as e:
-        logger.error(f"❌ Xatolik: {e}")
+        logger.error(f"Xatolik: {e}")
         await status_msg.edit_text("⚠️ Kutilmagan xatolik! Iltimos, qaytadan urinib ko'ring.")
 
 @dp.message()
@@ -278,7 +277,7 @@ async def handle_unknown(message: Message):
     """Noma'lum xabarlar"""
     await message.reply(
         "❌ Noto'g'ri buyruq!\n\n"
-        "Bu bot faqat instagramdan videolarini yuklab beradi.\n"
+        "Bu bot FAQAT INSTAGRAM videolarini yuklab beradi."
     )
 
 # ========== MAJBURIY OBUNA CHECK ==========
@@ -338,12 +337,12 @@ async def check_subscription_callback(callback: CallbackQuery):
 
 async def on_startup():
     """Bot ishga tushganda"""
-    logger.info("🚀 Bot ishga tushmoqda...")
+    logger.info("Bot ishga tushmoqda...")
     
     # D:/temp papkasini yaratish
     if not os.path.exists("D:/temp"):
         os.makedirs("D:/temp")
-        logger.info("📁 D:/temp papkasi yaratildi")
+        logger.info("D:/temp papkasi yaratildi")
     
     # Ma'lumotlar bazasini yaratish
     await db.init_db()
@@ -351,33 +350,33 @@ async def on_startup():
     # Adminlarni qo'shish
     for admin_id in ADMIN_IDS:
         await db.add_admin(admin_id)
-        logger.info(f"👑 Admin qo'shildi: {admin_id}")
+        logger.info(f"Admin qo'shildi: {admin_id}")
     
     # Maxfiy guruhni tekshirish
     try:
         chat = await bot.get_chat(SECRET_GROUP_ID)
-        logger.info(f"🔒 Maxfiy guruh ulandi: {chat.title}")
+        logger.info(f"Maxfiy guruh ulandi: {chat.title}")
         
         bot_member = await bot.get_chat_member(SECRET_GROUP_ID, bot.id)
         if bot_member.status not in ['administrator', 'creator']:
-            logger.warning("⚠️ Bot guruhda admin emas! Iltimos, botni guruhga admin qiling!")
+            logger.warning("Bot guruhda admin emas! Iltimos, botni guruhga admin qiling!")
     except Exception as e:
-        logger.error(f"❌ Maxfiy guruhga ulanishda xatolik: {e}")
-        logger.warning("⚠️ Iltimos, botni maxfiy guruhga admin qiling! ID: " + str(SECRET_GROUP_ID))
+        logger.error(f"Maxfiy guruhga ulanishda xatolik: {e}")
+        logger.warning("Iltimos, botni maxfiy guruhga admin qiling! ID: " + str(SECRET_GROUP_ID))
     
     # Cookies faylini tekshirish
     if os.path.exists("cookies.txt"):
-        logger.info("✅ Cookies fayli topildi")
+        logger.info("Cookies fayli topildi")
     else:
-        logger.warning("❌ Cookies fayli topilmadi! Instagram video yuklanmasligi mumkin.")
+        logger.warning("Cookies fayli topilmadi! Instagram video yuklanmasligi mumkin.")
     
-    logger.info("✅ Bot muvaffaqiyatli ishga tushdi! 🎉")
+    logger.info("Bot muvaffaqiyatli ishga tushdi!")
 
 async def on_shutdown():
     """Bot to'xtaganda"""
-    logger.info("🛑 Bot to'xtatilmoqda...")
+    logger.info("Bot to'xtatilmoqda...")
     await bot.session.close()
-    logger.info("✅ Bot to'xtatildi.")
+    logger.info("Bot to'xtatildi.")
 
 async def main():
     """Asosiy funksiya"""
