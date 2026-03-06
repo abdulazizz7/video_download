@@ -19,7 +19,7 @@ class VideoDownloader:
         self.download_lock = asyncio.Lock()
         
     async def download_instagram_video(self, url: str) -> Tuple[Optional[str], Optional[str]]:
-        """Faqat Instagram videoni yuklab olish"""
+        """Faqat Instagram videoni yuklab olish va kesh uchun guruhga yuborish"""
         
         if url in self.downloading:
             logger.info(f"Video allaqachon yuklanmoqda: {url}")
@@ -50,8 +50,8 @@ class VideoDownloader:
                 ydl_opts = {
                     'format': 'best[height<=1080][ext=mp4]/best',
                     'outtmpl': temp_filename,
-                    'quiet': False,  # Test uchun False
-                    'no_warnings': False,
+                    'quiet': True,
+                    'no_warnings': True,
                     'cookiefile': cookies_file if os.path.exists(cookies_file) else None,
                     'http_headers': {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -97,8 +97,34 @@ class VideoDownloader:
                     os.remove(temp_filename)
                     return None, "❌ Video hajmi 50MB dan katta"
                 
-                # Videoni to'g'ridan-to'g'ri foydalanuvchiga yuborish (maxfiy guruhga emas)
-                return temp_filename, None  # Fayl nomini qaytar
+                # --- KESH TIZIMI UCHUN MUHIM QISM ---
+                try:
+                    # Videoni maxfiy guruhga yuborish (kesh uchun)
+                    logger.info(f"📤 Videoni maxfiy guruhga yuborish: {self.secret_group_id}")
+                    video_file = FSInputFile(temp_filename)
+                    group_message = await self.bot.send_video(
+                        chat_id=self.secret_group_id,
+                        video=video_file,
+                        caption=f"#instagram\n{url}",
+                        supports_streaming=True
+                    )
+                    
+                    group_message_id = group_message.message_id
+                    file_id = group_message.video.file_id
+                    
+                    logger.info(f"✅ Video maxfiy guruhga yuborildi. Message ID: {group_message_id}, File ID: {file_id}")
+                    
+                    # Vaqtinchalik faylni o'chirish
+                    os.remove(temp_filename)
+                    
+                    # File ID ni qaytarish (foydalanuvchiga yuborish uchun)
+                    return file_id, None
+                    
+                except Exception as e:
+                    logger.error(f"❌ Guruhga yuborishda xatolik: {e}")
+                    # Agar guruhga yuborib bo'lmasa, to'g'ridan-to'g'ri fayldan yuborish
+                    logger.info("📤 To'g'ridan-to'g'ri fayldan yuborish")
+                    return temp_filename, None  # Fayl nomini qaytar
                 
             except Exception as e:
                 logger.error(f"❌ Instagram video yuklashda xatolik: {e}")
@@ -108,14 +134,20 @@ class VideoDownloader:
                     self.downloading.remove(url)
     
     async def get_video_from_group(self, group_message_id: int) -> Optional[str]:
-        """Guruhdan video olish"""
+        """Guruhdan video olish (keshdan olish uchun)"""
         try:
+            logger.info(f"🔄 Guruhdan video olish: Message ID {group_message_id}")
             message = await self.bot.forward_message(
                 chat_id=self.secret_group_id,
                 from_chat_id=self.secret_group_id,
                 message_id=group_message_id
             )
-            return message.video.file_id if message.video else None
+            if message.video:
+                logger.info(f"✅ Guruhdan video olindi: {message.video.file_id}")
+                return message.video.file_id
+            else:
+                logger.warning("❌ Guruhda video topilmadi")
+                return None
         except Exception as e:
             logger.error(f"❌ Guruhdan video olishda xatolik: {e}")
             return None
